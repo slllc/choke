@@ -7,15 +7,15 @@ import (
 )
 
 type Choke struct {
-	Ch chan func()
+	Ch    chan func()
+	width int
 }
 
-// New creates a new choke point. The depth sets the
-// cap() of the channel. In some use valid cases this
-// may need to > 0 to prevent deadlocks.
-func New(depth int) (c *Choke) {
+// New creates a new choke point.
+func New(width int) (c *Choke) {
 	c = &Choke{
-		Ch: make(chan func(), depth),
+		Ch:    make(chan func()),
+		width: width,
 	}
 	return // implicit
 }
@@ -32,9 +32,16 @@ func (c *Choke) Do(f func() error) error {
 	return <-respCh
 }
 
+func (c *Choke) Start(ctx context.Context) *Choke {
+	for i := 0; i < c.width; i++ {
+		go c.Doer1(ctx)
+	}
+	return c
+}
+
 // Doer is the goroutine that pulls the actions from
 // the channel and executest them.
-func (c *Choke) Doer(ctx context.Context) {
+func (c *Choke) Doer1(ctx context.Context) {
 LOOP:
 	for {
 		select {

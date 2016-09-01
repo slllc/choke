@@ -1,21 +1,28 @@
+
 # Package choke
-###Creates a choke point where actions being performed by multiple goroutines are serialized
+### Creates a choke point where actions being performed by multiple goroutines are serialized according to width.
+
+``` Note that this behavior has changed from the original version```
 
 
-To create a new choke: 
+To create a new choke:
 
-> choke := New(depth)<br>
+> choke := New(width)<br>
 
-Depth may need to be > 0 to prevent deadlock under some circumstances.
+Width sets the degree of parallelism. Width = 1 makes a choke a mutex.
 
 ---
-You then need to start the choke's goroutine:
+You then need to start the choke's goroutine(s):
 
-> go choke.Doer(ctx)
+> choke.Start(ctx)
 
-You can use context.TODO() if you're not using contexts (which if you aren't, you might want to reconsider)
+Just for fun, you can combine the New and Start:
+
+choke := New(width).Start(ctx)
+
+##### You can use context.TODO() if you're not using contexts (which if you aren't, you might want to reconsider)
 ---
-to execute code under the choke, wrap it in a call to Do:
+### to execute code under the choke, wrap it in a call to Do:
 
 ...
 >err = choke.Do(func()error{<br>
